@@ -1,0 +1,28 @@
+.team-members-box {
+
+}
+
+.team-member {
+  display: inline-block;
+  border: 1px solid black;
+}
+
+.team-member__selected {
+  background: red;
+}
+
+.team-member-issue {
+  border: 1px solid grey;
+}
+
+.unassigned-issues-box {
+}
+
+.unassigned-issue {
+  display: inline-block;
+  border: 1px solid black;
+}
+
+.unassigned-issue .dragged {
+  background: red;
+}
