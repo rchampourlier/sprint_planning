@@ -12,8 +12,8 @@ type alias Model =
   , name : String
   }
 
-init : String -> Float -> List Issue.Model -> Model
-init name capacity assignedIssues =
+init : String -> Float -> Model
+init name capacity =
   { capacity = capacity
   , name = name
   }
@@ -21,8 +21,8 @@ init name capacity assignedIssues =
 
 -- VIEW
 
-view : Model -> Float -> List Html -> Html
-view model assignedCapacity assignedIssueViews =
+view : Model -> Float -> Float -> Html
+view model developerEstimate reviewerEstimate =
   div []
     [ div [] [ text model.name ]
     , div []
@@ -31,10 +31,8 @@ view model assignedCapacity assignedIssueViews =
       ]
     , div []
       [ span [] [ text "Remaining: " ]
-      , span [] [ text <| toString (model.capacity - assignedCapacity) ]
+      , span [] [ text <| toString (model.capacity - developerEstimate) ]
       ]
     , div []
-      [ span [] [ text "Assigned issues: " ]
-      , div [] assignedIssueViews
-      ]
+      [ span [] [ text <| "Review estimate: " ++ (toString reviewerEstimate) ] ]
     ]

@@ -9,144 +9,176 @@ import Debug exposing (log)
 import Issue
 import TeamMember
 import List
+import ListFunctions
 
 
 -- MODEL
 
-type alias TeamMemberID = Int
-type alias Assignment = (TeamMemberID, Issue.Model)
+type Role = Developer | Reviewer
+type alias Assignment = (TeamMember.Model, Role, Issue.Model)
 type alias Model =
-  { draggedIssue : Maybe Issue.Model
-  , teamMembers : List (TeamMemberID, TeamMember.Model)
+  { issues : List Issue.Model
+  , teamMembers : List TeamMember.Model
+  , draggedTeamMember : Maybe TeamMember.Model
   , assignments : List Assignment
-  , unassignedIssues : List Issue.Model
   }
 
-init : List Issue.Model -> List Assignment -> List (TeamMemberID, TeamMember.Model) -> Model
-init unassignedIssues assignments teamMembers =
-  { draggedIssue = Nothing
-  , assignments = []
-  , unassignedIssues = unassignedIssues
+init : List Issue.Model -> List TeamMember.Model -> Model
+init issues teamMembers =
+  { issues = issues
   , teamMembers = teamMembers
+  , draggedTeamMember = Nothing
+  , assignments = []
   }
 
-getAssignedIssues : Model -> TeamMemberID -> List Issue.Model
-getAssignedIssues model teamMemberID =
-  List.filter (\(tmID, _) -> tmID == teamMemberID) model.assignments
-    |> List.map (\(_, i) -> i)
+getAssignmentsTotalEstimate : Model -> TeamMember.Model -> Role -> Float
+getAssignmentsTotalEstimate model teamMember role =
+  List.filter (\(tm, r, _) -> tm == teamMember && r == role) model.assignments
+    |> List.map issueFromAssignment
+    |> sumEstimates
 
-getTeamMember : Model -> TeamMemberID -> Maybe TeamMember.Model
-getTeamMember model teamMemberID =
-  List.filter (\(tmID, _) -> tmID == teamMemberID) model.teamMembers
-    |> List.map (\(_, tm) -> tm)
-    |> List.head
+getIssuesWithoutDeveloper : Model -> List Issue.Model
+getIssuesWithoutDeveloper model =
+  let issues =
+    List.filter (\(_, r, _) -> r == Developer) model.assignments
+      |> List.map issueFromAssignment
+  in
+    List.filter (\i -> not (List.member i issues)) model.issues
+
+getIssuesWithDeveloperNoReviewer : Model -> List Issue.Model
+getIssuesWithDeveloperNoReviewer model =
+  let
+    issuesWithoutDeveloper = getIssuesWithoutDeveloper model
+    issuesOk = getIssuesOk model
+  in
+    ListFunctions.substract model.issues (issuesOk ++ issuesWithoutDeveloper)
+
+getIssuesOk : Model -> List Issue.Model
+getIssuesOk model = List.filter (issueOk model.assignments) model.issues
+
+getIssueAssignments : Model -> Issue.Model -> List Assignment
+getIssueAssignments model issue =
+  filterAssignmentsForIssue issue model.assignments
+
+issueFromAssignment : Assignment -> Issue.Model
+issueFromAssignment (_, _, i) = i
+
+filterAssignmentsForIssue : Issue.Model -> List Assignment -> List Assignment
+filterAssignmentsForIssue issue assignments =
+  List.filter (\(_, _, i) -> i == issue) assignments
+
+filterAssignmentsForRole : Role -> List Assignment -> List Assignment
+filterAssignmentsForRole role assignments =
+  List.filter (\(_, r, _) -> r == role) assignments
+
+issueOk : List Assignment -> Issue.Model -> Bool
+issueOk assignments issue =
+  List.length (filterAssignmentsForIssue issue assignments) == 2
+
+sumEstimates : List Issue.Model -> Float
+sumEstimates issues =
+  List.map (\i -> i.estimate) issues
+    |> List.foldl (+) 0
+
 
 -- UPDATE
 
 type Action
-  = Drag Issue.Model
+  = Drag TeamMember.Model
   | DragOver
-  | DropAndAssign TeamMemberID
-  | DropAndUnassign
+  | DropAndAssign Issue.Model Role
 
 update : Action -> Model -> Model
 update action model =
   case action of
 
-    DropAndAssign teamMemberID ->
-      case model.draggedIssue of
+    DropAndAssign issue role ->
+      case model.draggedTeamMember of
         Nothing -> model
-        Just draggedIssue ->
-          { model | assignments <- updateAssignments teamMemberID draggedIssue model.assignments,
-                    unassignedIssues <- removeIssue draggedIssue model.unassignedIssues }
+        Just draggedTeamMember ->
+          { model |
+              assignments <- updateAssignments draggedTeamMember issue role model.assignments
+          }
 
-    DropAndUnassign ->
-      case model.draggedIssue of
-        Nothing -> model
-        Just draggedIssue ->
-          { model | assignments <- removeAssignment draggedIssue model.assignments,
-                    unassignedIssues <- model.unassignedIssues ++ [ draggedIssue ] }
-
-    Drag issue -> { model | draggedIssue <- Just issue }
-
+    Drag teamMember -> { model | draggedTeamMember <- Just teamMember }
     DragOver -> model
 
-updateAssignments : TeamMemberID -> Issue.Model -> List Assignment -> List Assignment
-updateAssignments teamMemberID issue assignments =
-  List.filter (\(tmId, i) -> i /= issue) assignments
-    |> List.append [ (teamMemberID, issue) ]
+updateAssignments : TeamMember.Model -> Issue.Model -> Role -> List Assignment -> List Assignment
+updateAssignments teamMember issue role assignments =
+  removeAssignment issue role assignments
+    |> List.append [ (teamMember, role, issue) ]
 
-removeIssue : Issue.Model -> List Issue.Model -> List Issue.Model
-removeIssue removedIssue issues =
-  List.filter (\i -> i /= removedIssue) issues
-
-removeAssignment : Issue.Model -> List Assignment -> List Assignment
-removeAssignment unassignedIssue assignments =
-  List.filter (\(_, i) -> (i /= unassignedIssue)) assignments
+removeAssignment : Issue.Model -> Role -> List Assignment -> List Assignment
+removeAssignment issue role assignments =
+  List.filter (\(_, r, i) -> (r /= role || i /= issue)) assignments
 
 
 -- VIEW
 
 view : Signal.Address Action -> Model -> Html
 view address model =
-  let
-    isDraggedIssue : Issue.Model -> (Issue.Model, Bool)
-    isDraggedIssue issue =
-      case model.draggedIssue of
-        Nothing -> (issue, False)
-        Just draggedIssue -> (issue, draggedIssue == issue)
-    teamMemberViews = List.map (viewTeamMember address model) model.teamMembers
-    unassignedIssueViews = List.map (viewUnassignedIssue address) (List.map isDraggedIssue model.unassignedIssues)
-  in
-    div []
-      [ span [ style [ ("font-weight", "bold") ] ] [ text "Team members: " ]
-      , div [ class "team-members-box" ] teamMemberViews
-      , div
-        [ class "unassigned-issues-box"
-        , onDragOver address DragOver
-        , onDrop address DropAndUnassign
-        ]
-        ([ span
-          [ style [ ("font-weight", "bold") ] ]
-          [ text "Unassigned issues: " ]
-        ] ++ unassignedIssueViews)
+  div []
+    [ div [ class "box" ]
+      [ span [] [ text "Issues" ]
+      , div [] [ viewIssues address model "Without developer" getIssuesWithoutDeveloper ]
+      , div [] [ viewIssues address model "Without reviewer" getIssuesWithDeveloperNoReviewer ]
+      , div [] [ viewIssues address model "Fully assigned" getIssuesOk ]
       ]
+    , div [ class "box" ]
+      [ span [] [ text "Team Members" ]
+      , div [] [ viewTeamMembers address model ]
+      ]
+    ]
 
--- Displays a team member (using TeamMember.view).
-viewTeamMember : Signal.Address Action -> Model -> (TeamMemberID, TeamMember.Model) -> Html
-viewTeamMember address model (teamMemberID, teamMember) =
-  let
-    assignedIssues = getAssignedIssues model teamMemberID
-    assignedCapacity = List.map (\i -> i.estimate) assignedIssues |> List.foldl (+) 0
-    assignedIssueViews = List.map (viewAssignedIssue address) assignedIssues
-  in
-    div
-      [ class "team-member"
-      , onDragOver address DragOver
-      , onDrop address (DropAndAssign teamMemberID)
-      ]
-      [ TeamMember.view teamMember assignedCapacity assignedIssueViews
-      ]
+viewIssues : Signal.Address Action -> Model -> String -> (Model -> List Issue.Model) -> Html
+viewIssues address model label getIssues =
+  div []
+    [ span [] [ text label ]
+    , div [] (List.map (viewIssueAssignable address model) (getIssues model))
+    ]
 
-viewUnassignedIssue : Signal.Address Action -> (Issue.Model, Bool) -> Html
-viewUnassignedIssue address (issue, beingDragged) =
+viewIssueAssignable : Signal.Address Action -> Model -> Issue.Model -> Html
+viewIssueAssignable address model issue =
   let
-    htmlClasses = if beingDragged then "unassigned-issue" else "unassigned-issue dragged"
+    roleLabel : Role -> String
+    roleLabel role =
+      let
+        assignment =
+          filterAssignmentsForRole role (getIssueAssignments model issue)
+            |> List.head
+      in
+        case assignment of
+          Nothing -> "?"
+          Just (tm, _, _) -> tm.name
   in
-    div
-      [ draggable "true"
-      , class htmlClasses
-      , onDrag address (Drag issue)
-      ]
+    div [ class "box" ]
       [ Issue.view issue
+      , div
+        [ onDragOver address DragOver
+        , onDrop address (DropAndAssign issue Developer)
+        ]
+        [ span [ class "box" ] [ text <| "Developer: " ++ (roleLabel Developer) ] ]
+      , div
+        [ onDragOver address DragOver
+        , onDrop address (DropAndAssign issue Reviewer)
+        ]
+        [ span [ class "box" ] [ text <| "Reviewer: " ++ (roleLabel Reviewer) ] ]
       ]
 
-viewAssignedIssue : Signal.Address Action -> Issue.Model -> Html
-viewAssignedIssue address issue =
-  div
-    [ draggable "true"
-    , class ""
-    , onDrag address (Drag issue)
-    ]
-    [ Issue.view issue
-    ]
+viewTeamMembers : Signal.Address Action -> Model -> Html
+viewTeamMembers address model =
+  div []
+    (List.map (viewTeamMemberDraggable address model) model.teamMembers)
+
+viewTeamMemberDraggable : Signal.Address Action -> Model -> TeamMember.Model -> Html
+viewTeamMemberDraggable address model teamMember =
+  let
+    developerEstimate = getAssignmentsTotalEstimate model teamMember Developer
+    reviewerEstimate = getAssignmentsTotalEstimate model teamMember Reviewer
+  in
+    div
+      [ class "box"
+      , draggable "true"
+      , onDrag address (Drag teamMember)
+      ]
+      [ TeamMember.view teamMember developerEstimate reviewerEstimate ]

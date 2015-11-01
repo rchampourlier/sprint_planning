@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "gulp": "latest",
+    "gulp-watch": "4.2.5",
+    "gulp-batch": "latest",
+    "gulp-shell": "latest",
+    "gulp-debug": "latest",
+    "gulp-webserver": "latest"
+  }
+}

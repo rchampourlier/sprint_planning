@@ -4328,6 +4328,36 @@ Elm.List.make = function (_elm) {
                       ,sortWith: sortWith};
    return _elm.List.values;
 };
+Elm.ListFunctions = Elm.ListFunctions || {};
+Elm.ListFunctions.make = function (_elm) {
+   "use strict";
+   _elm.ListFunctions = _elm.ListFunctions || {};
+   if (_elm.ListFunctions.values)
+   return _elm.ListFunctions.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "ListFunctions",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var substract = F2(function (list1,
+   list2) {
+      return A2($List.filter,
+      function (i) {
+         return $Basics.not(A2($List.member,
+         i,
+         list2));
+      },
+      list1);
+   });
+   _elm.ListFunctions.values = {_op: _op
+                               ,substract: substract};
+   return _elm.ListFunctions.values;
+};
 Elm.Main = Elm.Main || {};
 Elm.Main.make = function (_elm) {
    "use strict";
@@ -4349,33 +4379,25 @@ Elm.Main.make = function (_elm) {
    $StartApp$Simple = Elm.StartApp.Simple.make(_elm),
    $TeamMember = Elm.TeamMember.make(_elm);
    var main = function () {
-      var assignments = _L.fromArray([]);
-      var david = A3($TeamMember.init,
+      var david = A2($TeamMember.init,
       "David",
-      120,
-      _L.fromArray([]));
-      var romain = A3($TeamMember.init,
+      120);
+      var romain = A2($TeamMember.init,
       "Romain",
-      20,
-      _L.fromArray([]));
-      var teamMembers = _L.fromArray([{ctor: "_Tuple2"
-                                      ,_0: 0
-                                      ,_1: romain}
-                                     ,{ctor: "_Tuple2"
-                                      ,_0: 1
-                                      ,_1: david}]);
+      20);
+      var teamMembers = _L.fromArray([romain
+                                     ,david]);
       var issue2 = A2($Issue.init,
       "Issue 2",
       20);
       var issue1 = A2($Issue.init,
       "Issue 1",
       40);
-      var unassignedIssues = _L.fromArray([issue1
-                                          ,issue2]);
+      var issues = _L.fromArray([issue1
+                                ,issue2]);
       return $StartApp$Simple.start({_: {}
-                                    ,model: A3($SprintPlanning.init,
-                                    unassignedIssues,
-                                    assignments,
+                                    ,model: A2($SprintPlanning.init,
+                                    issues,
                                     teamMembers)
                                     ,update: $SprintPlanning.update
                                     ,view: $SprintPlanning.view});
@@ -12329,6 +12351,111 @@ Elm.Result.make = function (_elm) {
                         ,Err: Err};
    return _elm.Result.values;
 };
+Elm.Set = Elm.Set || {};
+Elm.Set.make = function (_elm) {
+   "use strict";
+   _elm.Set = _elm.Set || {};
+   if (_elm.Set.values)
+   return _elm.Set.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Set",
+   $Dict = Elm.Dict.make(_elm),
+   $List = Elm.List.make(_elm);
+   var partition = F2(function (p,
+   set) {
+      return A2($Dict.partition,
+      F2(function (k,_v0) {
+         return function () {
+            return p(k);
+         }();
+      }),
+      set);
+   });
+   var filter = F2(function (p,
+   set) {
+      return A2($Dict.filter,
+      F2(function (k,_v2) {
+         return function () {
+            return p(k);
+         }();
+      }),
+      set);
+   });
+   var foldr = F3(function (f,
+   b,
+   s) {
+      return A3($Dict.foldr,
+      F3(function (k,_v4,b) {
+         return function () {
+            return A2(f,k,b);
+         }();
+      }),
+      b,
+      s);
+   });
+   var foldl = F3(function (f,
+   b,
+   s) {
+      return A3($Dict.foldl,
+      F3(function (k,_v6,b) {
+         return function () {
+            return A2(f,k,b);
+         }();
+      }),
+      b,
+      s);
+   });
+   var toList = $Dict.keys;
+   var diff = $Dict.diff;
+   var intersect = $Dict.intersect;
+   var union = $Dict.union;
+   var member = $Dict.member;
+   var isEmpty = $Dict.isEmpty;
+   var remove = $Dict.remove;
+   var insert = function (k) {
+      return A2($Dict.insert,
+      k,
+      {ctor: "_Tuple0"});
+   };
+   var singleton = function (k) {
+      return A2($Dict.singleton,
+      k,
+      {ctor: "_Tuple0"});
+   };
+   var empty = $Dict.empty;
+   var fromList = function (xs) {
+      return A3($List.foldl,
+      insert,
+      empty,
+      xs);
+   };
+   var map = F2(function (f,s) {
+      return fromList(A2($List.map,
+      f,
+      toList(s)));
+   });
+   _elm.Set.values = {_op: _op
+                     ,empty: empty
+                     ,singleton: singleton
+                     ,insert: insert
+                     ,remove: remove
+                     ,isEmpty: isEmpty
+                     ,member: member
+                     ,foldl: foldl
+                     ,foldr: foldr
+                     ,map: map
+                     ,filter: filter
+                     ,partition: partition
+                     ,union: union
+                     ,intersect: intersect
+                     ,diff: diff
+                     ,toList: toList
+                     ,fromList: fromList};
+   return _elm.Set.values;
+};
 Elm.Signal = Elm.Signal || {};
 Elm.Signal.make = function (_elm) {
    "use strict";
@@ -12490,49 +12617,37 @@ Elm.SprintPlanning.make = function (_elm) {
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $Issue = Elm.Issue.make(_elm),
    $List = Elm.List.make(_elm),
+   $ListFunctions = Elm.ListFunctions.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $TeamMember = Elm.TeamMember.make(_elm);
-   var removeAssignment = F2(function (unassignedIssue,
+   var removeAssignment = F3(function (issue,
+   role,
    assignments) {
       return A2($List.filter,
       function (_v0) {
          return function () {
             switch (_v0.ctor)
-            {case "_Tuple2":
+            {case "_Tuple3":
                return !_U.eq(_v0._1,
-                 unassignedIssue);}
+                 role) || !_U.eq(_v0._2,issue);}
             _U.badCase($moduleName,
-            "on line 85, column 28 to 48");
+            "on line 113, column 31 to 54");
          }();
       },
       assignments);
    });
-   var removeIssue = F2(function (removedIssue,
-   issues) {
-      return A2($List.filter,
-      function (i) {
-         return !_U.eq(i,
-         removedIssue);
-      },
-      issues);
-   });
-   var updateAssignments = F3(function (teamMemberID,
+   var updateAssignments = F4(function (teamMember,
    issue,
+   role,
    assignments) {
-      return $List.append(_L.fromArray([{ctor: "_Tuple2"
-                                        ,_0: teamMemberID
-                                        ,_1: issue}]))(A2($List.filter,
-      function (_v4) {
-         return function () {
-            switch (_v4.ctor)
-            {case "_Tuple2":
-               return !_U.eq(_v4._1,issue);}
-            _U.badCase($moduleName,
-            "on line 76, column 30 to 40");
-         }();
-      },
+      return $List.append(_L.fromArray([{ctor: "_Tuple3"
+                                        ,_0: teamMember
+                                        ,_1: role
+                                        ,_2: issue}]))(A3(removeAssignment,
+      issue,
+      role,
       assignments));
    });
    var update = F2(function (action,
@@ -12540,266 +12655,352 @@ Elm.SprintPlanning.make = function (_elm) {
       return function () {
          switch (action.ctor)
          {case "Drag":
-            return _U.replace([["draggedIssue"
+            return _U.replace([["draggedTeamMember"
                                ,$Maybe.Just(action._0)]],
               model);
             case "DragOver": return model;
             case "DropAndAssign":
             return function () {
-                 var _v11 = model.draggedIssue;
-                 switch (_v11.ctor)
+                 var _v9 = model.draggedTeamMember;
+                 switch (_v9.ctor)
                  {case "Just":
                     return _U.replace([["assignments"
-                                       ,A3(updateAssignments,
+                                       ,A4(updateAssignments,
+                                       _v9._0,
                                        action._0,
-                                       _v11._0,
-                                       model.assignments)]
-                                      ,["unassignedIssues"
-                                       ,A2(removeIssue,
-                                       _v11._0,
-                                       model.unassignedIssues)]],
+                                       action._1,
+                                       model.assignments)]],
                       model);
                     case "Nothing": return model;}
                  _U.badCase($moduleName,
-                 "between lines 57 and 63");
-              }();
-            case "DropAndUnassign":
-            return function () {
-                 var _v13 = model.draggedIssue;
-                 switch (_v13.ctor)
-                 {case "Just":
-                    return _U.replace([["assignments"
-                                       ,A2(removeAssignment,
-                                       _v13._0,
-                                       model.assignments)]
-                                      ,["unassignedIssues"
-                                       ,A2($Basics._op["++"],
-                                       model.unassignedIssues,
-                                       _L.fromArray([_v13._0]))]],
-                      model);
-                    case "Nothing": return model;}
-                 _U.badCase($moduleName,
-                 "between lines 64 and 70");
+                 "between lines 96 and 103");
               }();}
          _U.badCase($moduleName,
-         "between lines 54 and 72");
+         "between lines 93 and 104");
       }();
    });
-   var DropAndUnassign = {ctor: "DropAndUnassign"};
-   var DropAndAssign = function (a) {
+   var DropAndAssign = F2(function (a,
+   b) {
       return {ctor: "DropAndAssign"
-             ,_0: a};
-   };
+             ,_0: a
+             ,_1: b};
+   });
    var DragOver = {ctor: "DragOver"};
    var Drag = function (a) {
       return {ctor: "Drag",_0: a};
    };
-   var viewUnassignedIssue = F2(function (address,
-   _v15) {
-      return function () {
-         switch (_v15.ctor)
-         {case "_Tuple2":
-            return function () {
-                 var htmlClasses = _v15._1 ? "unassigned-issue" : "unassigned-issue dragged";
-                 return A2($Html.div,
-                 _L.fromArray([$Html$Attributes.draggable("true")
-                              ,$Html$Attributes.$class(htmlClasses)
-                              ,A2($DragAndDropEvents.onDrag,
-                              address,
-                              Drag(_v15._0))]),
-                 _L.fromArray([$Issue.view(_v15._0)]));
-              }();}
-         _U.badCase($moduleName,
-         "between lines 133 and 142");
-      }();
+   var sumEstimates = function (issues) {
+      return A2($List.foldl,
+      F2(function (x,y) {
+         return x + y;
+      }),
+      0)(A2($List.map,
+      function (i) {
+         return i.estimate;
+      },
+      issues));
+   };
+   var filterAssignmentsForRole = F2(function (role,
+   assignments) {
+      return A2($List.filter,
+      function (_v11) {
+         return function () {
+            switch (_v11.ctor)
+            {case "_Tuple3":
+               return _U.eq(_v11._1,role);}
+            _U.badCase($moduleName,
+            "on line 72, column 30 to 39");
+         }();
+      },
+      assignments);
    });
-   var viewAssignedIssue = F2(function (address,
+   var filterAssignmentsForIssue = F2(function (issue,
+   assignments) {
+      return A2($List.filter,
+      function (_v16) {
+         return function () {
+            switch (_v16.ctor)
+            {case "_Tuple3":
+               return _U.eq(_v16._2,issue);}
+            _U.badCase($moduleName,
+            "on line 68, column 30 to 40");
+         }();
+      },
+      assignments);
+   });
+   var issueOk = F2(function (assignments,
    issue) {
-      return A2($Html.div,
-      _L.fromArray([$Html$Attributes.draggable("true")
-                   ,$Html$Attributes.$class("")
-                   ,A2($DragAndDropEvents.onDrag,
-                   address,
-                   Drag(issue))]),
-      _L.fromArray([$Issue.view(issue)]));
+      return _U.eq($List.length(A2(filterAssignmentsForIssue,
+      issue,
+      assignments)),
+      2);
    });
-   var getTeamMember = F2(function (model,
-   teamMemberID) {
-      return $List.head($List.map(function (_v23) {
-         return function () {
-            switch (_v23.ctor)
-            {case "_Tuple2":
-               return _v23._1;}
-            _U.badCase($moduleName,
-            "on line 41, column 30 to 32");
-         }();
-      })(A2($List.filter,
-      function (_v19) {
-         return function () {
-            switch (_v19.ctor)
-            {case "_Tuple2":
-               return _U.eq(_v19._0,
-                 teamMemberID);}
-            _U.badCase($moduleName,
-            "on line 40, column 30 to 50");
-         }();
-      },
-      model.teamMembers)));
-   });
-   var getAssignedIssues = F2(function (model,
-   teamMemberID) {
-      return $List.map(function (_v31) {
-         return function () {
-            switch (_v31.ctor)
-            {case "_Tuple2":
-               return _v31._1;}
-            _U.badCase($moduleName,
-            "on line 36, column 29 to 30");
-         }();
-      })(A2($List.filter,
-      function (_v27) {
-         return function () {
-            switch (_v27.ctor)
-            {case "_Tuple2":
-               return _U.eq(_v27._0,
-                 teamMemberID);}
-            _U.badCase($moduleName,
-            "on line 35, column 30 to 50");
-         }();
-      },
-      model.assignments));
-   });
-   var viewTeamMember = F3(function (address,
-   model,
-   _v35) {
+   var issueFromAssignment = function (_v21) {
       return function () {
-         switch (_v35.ctor)
-         {case "_Tuple2":
-            return function () {
-                 var assignedIssues = A2(getAssignedIssues,
-                 model,
-                 _v35._0);
-                 var assignedCapacity = A2($List.foldl,
-                 F2(function (x,y) {
-                    return x + y;
-                 }),
-                 0)(A2($List.map,
-                 function (i) {
-                    return i.estimate;
-                 },
-                 assignedIssues));
-                 var assignedIssueViews = A2($List.map,
-                 viewAssignedIssue(address),
-                 assignedIssues);
-                 return A2($Html.div,
-                 _L.fromArray([$Html$Attributes.$class("team-member")
-                              ,A2($DragAndDropEvents.onDragOver,
-                              address,
-                              DragOver)
-                              ,A2($DragAndDropEvents.onDrop,
-                              address,
-                              DropAndAssign(_v35._0))]),
-                 _L.fromArray([A3($TeamMember.view,
-                 _v35._1,
-                 assignedCapacity,
-                 assignedIssueViews)]));
-              }();}
+         switch (_v21.ctor)
+         {case "_Tuple3":
+            return _v21._2;}
          _U.badCase($moduleName,
-         "between lines 118 and 129");
+         "on line 64, column 33 to 34");
       }();
+   };
+   var getIssueAssignments = F2(function (model,
+   issue) {
+      return A2(filterAssignmentsForIssue,
+      issue,
+      model.assignments);
    });
-   var view = F2(function (address,
-   model) {
-      return function () {
-         var teamMemberViews = A2($List.map,
-         A2(viewTeamMember,
-         address,
-         model),
-         model.teamMembers);
-         var isDraggedIssue = function (issue) {
-            return function () {
-               var _v39 = model.draggedIssue;
-               switch (_v39.ctor)
-               {case "Just":
-                  return {ctor: "_Tuple2"
-                         ,_0: issue
-                         ,_1: _U.eq(_v39._0,issue)};
-                  case "Nothing":
-                  return {ctor: "_Tuple2"
-                         ,_0: issue
-                         ,_1: false};}
-               _U.badCase($moduleName,
-               "between lines 95 and 98");
-            }();
-         };
-         var unassignedIssueViews = A2($List.map,
-         viewUnassignedIssue(address),
-         A2($List.map,
-         isDraggedIssue,
-         model.unassignedIssues));
-         return A2($Html.div,
-         _L.fromArray([]),
-         _L.fromArray([A2($Html.span,
-                      _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                                         ,_0: "font-weight"
-                                                                         ,_1: "bold"}]))]),
-                      _L.fromArray([$Html.text("Team members: ")]))
-                      ,A2($Html.div,
-                      _L.fromArray([$Html$Attributes.$class("team-members-box")]),
-                      teamMemberViews)
-                      ,A2($Html.div,
-                      _L.fromArray([$Html$Attributes.$class("unassigned-issues-box")
-                                   ,A2($DragAndDropEvents.onDragOver,
-                                   address,
-                                   DragOver)
-                                   ,A2($DragAndDropEvents.onDrop,
-                                   address,
-                                   DropAndUnassign)]),
-                      A2($Basics._op["++"],
-                      _L.fromArray([A2($Html.span,
-                      _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                                         ,_0: "font-weight"
-                                                                         ,_1: "bold"}]))]),
-                      _L.fromArray([$Html.text("Unassigned issues: ")]))]),
-                      unassignedIssueViews))]));
-      }();
+   var getIssuesOk = function (model) {
+      return A2($List.filter,
+      issueOk(model.assignments),
+      model.issues);
+   };
+   var getAssignmentsTotalEstimate = F3(function (model,
+   teamMember,
+   role) {
+      return sumEstimates($List.map(issueFromAssignment)(A2($List.filter,
+      function (_v26) {
+         return function () {
+            switch (_v26.ctor)
+            {case "_Tuple3":
+               return _U.eq(_v26._0,
+                 teamMember) && _U.eq(_v26._1,
+                 role);}
+            _U.badCase($moduleName,
+            "on line 36, column 31 to 60");
+         }();
+      },
+      model.assignments)));
    });
-   var init = F3(function (unassignedIssues,
-   assignments,
+   var init = F2(function (issues,
    teamMembers) {
       return {_: {}
              ,assignments: _L.fromArray([])
-             ,draggedIssue: $Maybe.Nothing
-             ,teamMembers: teamMembers
-             ,unassignedIssues: unassignedIssues};
+             ,draggedTeamMember: $Maybe.Nothing
+             ,issues: issues
+             ,teamMembers: teamMembers};
    });
    var Model = F4(function (a,
    b,
    c,
    d) {
       return {_: {}
-             ,assignments: c
-             ,draggedIssue: a
-             ,teamMembers: b
-             ,unassignedIssues: d};
+             ,assignments: d
+             ,draggedTeamMember: c
+             ,issues: a
+             ,teamMembers: b};
+   });
+   var Reviewer = {ctor: "Reviewer"};
+   var Developer = {ctor: "Developer"};
+   var getIssuesWithoutDeveloper = function (model) {
+      return function () {
+         var issues = $List.map(issueFromAssignment)(A2($List.filter,
+         function (_v31) {
+            return function () {
+               switch (_v31.ctor)
+               {case "_Tuple3":
+                  return _U.eq(_v31._1,
+                    Developer);}
+               _U.badCase($moduleName,
+               "on line 43, column 32 to 46");
+            }();
+         },
+         model.assignments));
+         return A2($List.filter,
+         function (i) {
+            return $Basics.not(A2($List.member,
+            i,
+            issues));
+         },
+         model.issues);
+      }();
+   };
+   var getIssuesWithDeveloperNoReviewer = function (model) {
+      return function () {
+         var issuesOk = getIssuesOk(model);
+         var issuesWithoutDeveloper = getIssuesWithoutDeveloper(model);
+         return A2($ListFunctions.substract,
+         model.issues,
+         A2($Basics._op["++"],
+         issuesOk,
+         issuesWithoutDeveloper));
+      }();
+   };
+   var viewIssueAssignable = F3(function (address,
+   model,
+   issue) {
+      return function () {
+         var roleLabel = function (role) {
+            return function () {
+               var assignment = $List.head(A2(filterAssignmentsForRole,
+               role,
+               A2(getIssueAssignments,
+               model,
+               issue)));
+               return function () {
+                  switch (assignment.ctor)
+                  {case "Just":
+                     switch (assignment._0.ctor)
+                       {case "_Tuple3":
+                          return assignment._0._0.name;}
+                       break;
+                     case "Nothing": return "?";}
+                  _U.badCase($moduleName,
+                  "between lines 150 and 153");
+               }();
+            }();
+         };
+         return A2($Html.div,
+         _L.fromArray([$Html$Attributes.$class("box")]),
+         _L.fromArray([$Issue.view(issue)
+                      ,A2($Html.div,
+                      _L.fromArray([A2($DragAndDropEvents.onDragOver,
+                                   address,
+                                   DragOver)
+                                   ,A2($DragAndDropEvents.onDrop,
+                                   address,
+                                   A2(DropAndAssign,
+                                   issue,
+                                   Developer))]),
+                      _L.fromArray([A2($Html.span,
+                      _L.fromArray([$Html$Attributes.$class("box")]),
+                      _L.fromArray([$Html.text(A2($Basics._op["++"],
+                      "Developer: ",
+                      roleLabel(Developer)))]))]))
+                      ,A2($Html.div,
+                      _L.fromArray([A2($DragAndDropEvents.onDragOver,
+                                   address,
+                                   DragOver)
+                                   ,A2($DragAndDropEvents.onDrop,
+                                   address,
+                                   A2(DropAndAssign,
+                                   issue,
+                                   Reviewer))]),
+                      _L.fromArray([A2($Html.span,
+                      _L.fromArray([$Html$Attributes.$class("box")]),
+                      _L.fromArray([$Html.text(A2($Basics._op["++"],
+                      "Reviewer: ",
+                      roleLabel(Reviewer)))]))]))]));
+      }();
+   });
+   var viewIssues = F4(function (address,
+   model,
+   label,
+   getIssues) {
+      return A2($Html.div,
+      _L.fromArray([]),
+      _L.fromArray([A2($Html.span,
+                   _L.fromArray([]),
+                   _L.fromArray([$Html.text(label)]))
+                   ,A2($Html.div,
+                   _L.fromArray([]),
+                   A2($List.map,
+                   A2(viewIssueAssignable,
+                   address,
+                   model),
+                   getIssues(model)))]));
+   });
+   var viewTeamMemberDraggable = F3(function (address,
+   model,
+   teamMember) {
+      return function () {
+         var reviewerEstimate = A3(getAssignmentsTotalEstimate,
+         model,
+         teamMember,
+         Reviewer);
+         var developerEstimate = A3(getAssignmentsTotalEstimate,
+         model,
+         teamMember,
+         Developer);
+         return A2($Html.div,
+         _L.fromArray([$Html$Attributes.$class("box")
+                      ,$Html$Attributes.draggable("true")
+                      ,A2($DragAndDropEvents.onDrag,
+                      address,
+                      Drag(teamMember))]),
+         _L.fromArray([A3($TeamMember.view,
+         teamMember,
+         developerEstimate,
+         reviewerEstimate)]));
+      }();
+   });
+   var viewTeamMembers = F2(function (address,
+   model) {
+      return A2($Html.div,
+      _L.fromArray([]),
+      A2($List.map,
+      A2(viewTeamMemberDraggable,
+      address,
+      model),
+      model.teamMembers));
+   });
+   var view = F2(function (address,
+   model) {
+      return A2($Html.div,
+      _L.fromArray([]),
+      _L.fromArray([A2($Html.div,
+                   _L.fromArray([$Html$Attributes.$class("box")]),
+                   _L.fromArray([A2($Html.span,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text("Issues")]))
+                                ,A2($Html.div,
+                                _L.fromArray([]),
+                                _L.fromArray([A4(viewIssues,
+                                address,
+                                model,
+                                "Without developer",
+                                getIssuesWithoutDeveloper)]))
+                                ,A2($Html.div,
+                                _L.fromArray([]),
+                                _L.fromArray([A4(viewIssues,
+                                address,
+                                model,
+                                "Without reviewer",
+                                getIssuesWithDeveloperNoReviewer)]))
+                                ,A2($Html.div,
+                                _L.fromArray([]),
+                                _L.fromArray([A4(viewIssues,
+                                address,
+                                model,
+                                "Fully assigned",
+                                getIssuesOk)]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([$Html$Attributes.$class("box")]),
+                   _L.fromArray([A2($Html.span,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text("Team Members")]))
+                                ,A2($Html.div,
+                                _L.fromArray([]),
+                                _L.fromArray([A2(viewTeamMembers,
+                                address,
+                                model)]))]))]));
    });
    _elm.SprintPlanning.values = {_op: _op
+                                ,Developer: Developer
+                                ,Reviewer: Reviewer
                                 ,Model: Model
                                 ,init: init
-                                ,getAssignedIssues: getAssignedIssues
-                                ,getTeamMember: getTeamMember
+                                ,getAssignmentsTotalEstimate: getAssignmentsTotalEstimate
+                                ,getIssuesWithoutDeveloper: getIssuesWithoutDeveloper
+                                ,getIssuesWithDeveloperNoReviewer: getIssuesWithDeveloperNoReviewer
+                                ,getIssuesOk: getIssuesOk
+                                ,getIssueAssignments: getIssueAssignments
+                                ,issueFromAssignment: issueFromAssignment
+                                ,filterAssignmentsForIssue: filterAssignmentsForIssue
+                                ,filterAssignmentsForRole: filterAssignmentsForRole
+                                ,issueOk: issueOk
+                                ,sumEstimates: sumEstimates
                                 ,Drag: Drag
                                 ,DragOver: DragOver
                                 ,DropAndAssign: DropAndAssign
-                                ,DropAndUnassign: DropAndUnassign
                                 ,update: update
                                 ,updateAssignments: updateAssignments
-                                ,removeIssue: removeIssue
                                 ,removeAssignment: removeAssignment
                                 ,view: view
-                                ,viewTeamMember: viewTeamMember
-                                ,viewUnassignedIssue: viewUnassignedIssue
-                                ,viewAssignedIssue: viewAssignedIssue};
+                                ,viewIssues: viewIssues
+                                ,viewIssueAssignable: viewIssueAssignable
+                                ,viewTeamMembers: viewTeamMembers
+                                ,viewTeamMemberDraggable: viewTeamMemberDraggable};
    return _elm.SprintPlanning.values;
 };
 Elm.StartApp = Elm.StartApp || {};
@@ -13198,14 +13399,13 @@ Elm.TeamMember.make = function (_elm) {
    $moduleName = "TeamMember",
    $Basics = Elm.Basics.make(_elm),
    $Html = Elm.Html.make(_elm),
-   $Issue = Elm.Issue.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm);
    var view = F3(function (model,
-   assignedCapacity,
-   assignedIssueViews) {
+   developerEstimate,
+   reviewerEstimate) {
       return A2($Html.div,
       _L.fromArray([]),
       _L.fromArray([A2($Html.div,
@@ -13226,19 +13426,17 @@ Elm.TeamMember.make = function (_elm) {
                                 _L.fromArray([$Html.text("Remaining: ")]))
                                 ,A2($Html.span,
                                 _L.fromArray([]),
-                                _L.fromArray([$Html.text($Basics.toString(model.capacity - assignedCapacity))]))]))
+                                _L.fromArray([$Html.text($Basics.toString(model.capacity - developerEstimate))]))]))
                    ,A2($Html.div,
                    _L.fromArray([]),
                    _L.fromArray([A2($Html.span,
-                                _L.fromArray([]),
-                                _L.fromArray([$Html.text("Assigned issues: ")]))
-                                ,A2($Html.div,
-                                _L.fromArray([]),
-                                assignedIssueViews)]))]));
+                   _L.fromArray([]),
+                   _L.fromArray([$Html.text(A2($Basics._op["++"],
+                   "Review estimate: ",
+                   $Basics.toString(reviewerEstimate)))]))]))]));
    });
-   var init = F3(function (name,
-   capacity,
-   assignedIssues) {
+   var init = F2(function (name,
+   capacity) {
       return {_: {}
              ,capacity: capacity
              ,name: name};

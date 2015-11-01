@@ -2,7 +2,6 @@ module Issue (Model, init, view) where
 
 import Html exposing (..)
 
-
 -- MODEL
 
 type alias Model =
