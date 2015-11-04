@@ -2,8 +2,6 @@ module TeamMember where
 
 import Html exposing (..)
 
-import Issue
-
 
 -- MODEL
 
