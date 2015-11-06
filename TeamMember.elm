@@ -22,7 +22,7 @@ init name capacity =
 view : Model -> Float -> Float -> Html
 view model developerEstimate reviewerEstimate =
   div []
-    [ div [] [ text model.name ]
+    [ h4 [] [ text model.name ]
     , div []
       [ span [] [ text "Initial capacity: " ]
       , span [] [ text <| toString model.capacity ]

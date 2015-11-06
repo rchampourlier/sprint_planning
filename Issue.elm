@@ -55,8 +55,8 @@ update action model teamMember =
 
 view : Signal.Address Action -> Model -> Html
 view address model =
-  div []
-    [ div [] [ text model.title ]
+  div [ class "issue-item card" ]
+    [ h4 [] [ text model.title ]
     , div []
       [ span [] [ text "Estimate: " ]
       , span [] [ text <| toString model.estimate ]
@@ -64,12 +64,12 @@ view address model =
         [ onDragOver address (DragOver Developer)
         , onDrop address (DropAndAssign Developer)
         ]
-        [ span [ class "box" ] [ text "Developer: ", roleBox address Developer model ] ]
+        [ span [] [ text "Developer: ", roleBox address Developer model ] ]
       , div
         [ onDragOver address (DragOver Reviewer)
         , onDrop address (DropAndAssign Reviewer)
         ]
-        [ span [ class "box" ] [ text "Reviewer: ", roleBox address Reviewer model ] ]
+        [ span [] [ text "Reviewer: ", roleBox address Reviewer model ] ]
       ]
     ]
 
@@ -80,8 +80,12 @@ roleBox address role model =
       case role of
         Developer -> model.developer
         Reviewer -> model.reviewer
-    unassignBox = span [ onClick address (Unassign role) ] [ text "X" ]
   in
     case teamMember of
-      Nothing -> span [] [] 
-      Just tm -> span [ class "box" ] [ text tm.name, unassignBox ]
+      Nothing -> span [] []
+      Just tm ->
+        button
+          [ class "mui-btn"
+          , onClick address (Unassign role)
+          ]
+        [ text tm.name ]

@@ -91,15 +91,15 @@ view address model =
     issuesWithoutReviewer = getIssuesForStatus MissingReviewer model
     issuesOk = getIssuesForStatus Ok model
   in
-    div []
-      [ div [ class "box" ]
-        [ span [] [ text "Issues" ]
+    div [ class "sprint-planning" ]
+      [ div [ class "issues-box box" ]
+        [ h2 [] [ text "Issues" ]
         , div [] [ viewIssues address "Without developer" issuesWithoutDeveloper ]
         , div [] [ viewIssues address "Without reviewer" issuesWithoutReviewer ]
         , div [] [ viewIssues address "Fully assigned" issuesOk ]
         ]
-      , div [ class "box" ]
-        [ span [] [ text "Team Members" ]
+      , div [ class "team-members-box box" ]
+        [ h2 [] [ text "Team Members" ]
         , div [] [ viewTeamMembers address model ]
         ]
       ]
@@ -111,8 +111,8 @@ viewIssues address label issues =
     viewIssue issue = Issue.view (Signal.forwardTo address (Modify issue)) issue
   in
     div []
-      [ span [] [ text label ]
-      , div [] (List.map viewIssue issues)
+      [ h3 [] [ text label ]
+      , div [ class "issues-bucket" ] (List.map viewIssue issues)
       ]
 
 viewTeamMembers : Signal.Address Action -> Model -> Html
@@ -127,7 +127,7 @@ viewTeamMemberDraggable address model teamMember =
     reviewerEstimate = getTotalAssignedEstimate model teamMember Reviewer
   in
     div
-      [ class "box"
+      [ class "team-member-item card"
       , draggable "true"
       , onDrag address (Drag teamMember)
       ]
