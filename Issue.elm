@@ -42,13 +42,13 @@ update action model teamMember =
 
     DropAndAssign role ->
       case role of
-        Developer -> { model | developer <- Just teamMember }
-        Reviewer -> { model | reviewer <- Just teamMember }
+        Developer -> { model | developer = Just teamMember }
+        Reviewer -> { model | reviewer = Just teamMember }
 
     Unassign role ->
       case role of
-        Developer -> { model | developer <- Nothing }
-        Reviewer -> { model | reviewer <- Nothing }
+        Developer -> { model | developer = Nothing }
+        Reviewer -> { model | reviewer = Nothing }
 
 
 -- VIEW

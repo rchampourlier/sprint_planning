@@ -69,7 +69,9 @@ type Action
 update : Action -> Model -> Model
 update action model =
   case action of
-    Drag teamMember -> { model | draggedTeamMember <- Just teamMember }
+    Drag teamMember ->
+      ( { model | draggedTeamMember = Just teamMember }
+      , Effects.none )
     Modify issue issueAction ->
       case model.draggedTeamMember of
         Nothing -> model
@@ -79,7 +81,8 @@ update action model =
               then Issue.update issueAction issue draggedTM
               else i
           in
-            { model | issues <- List.map updateIssue model.issues }
+            ( { model | issues = List.map updateIssue model.issues }
+            , Effects.none )
 
 
 -- VIEW
