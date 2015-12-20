@@ -20,14 +20,9 @@ h1 {
 }
 
 .card {
-  border-radius: 10px;
   background-color: #eee;
   margin: 0.2em;
   padding: 0.5em;
-}
-
-.card:first-child {
-  margin-left: 0;
 }
 
 .card h4 {
@@ -46,22 +41,17 @@ h1 {
 /* ISSUES */
 
 .issues-box {
-  width: 70%;
 }
 
 .issues-bucket {
-  display: flex;
-  flex-direction: row;
 }
 
 .issue-item {
-  width: 33%;
 }
 
 /* TEAM MEMBERS */
 
 .team-members-box {
-  width: 30%;
 }
 
 .team-member-item {

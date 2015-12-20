@@ -12,10 +12,10 @@ gulp.task('watch', function () {
 });
 
 gulp.task('build', function () {
-  return gulp.src('Main.elm', { read: false })
+  return gulp.src('src/Main.elm', { read: false })
     .pipe(shell([
       'echo Building <%= file.path %>',
-      'elm-make <%= file.path %>'
+      'elm-make <%= file.path %> --output elm.js'
     ], {}));
 });
 

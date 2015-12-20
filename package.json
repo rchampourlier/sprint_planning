@@ -6,5 +6,6 @@
     "gulp-shell": "latest",
     "gulp-debug": "latest",
     "gulp-webserver": "latest"
-  }
+  },
+  "source-directories": [ "app", "mui" ]
 }
