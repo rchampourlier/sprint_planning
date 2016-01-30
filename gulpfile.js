@@ -23,8 +23,8 @@ gulp.task('webserver', function() {
   gulp.src('.')
     .pipe(webserver({
       livereload: false,
-      directoryListing: true,
-      open: true
+      directoryListing: true//,
+      // open: true
     }));
 });
 
