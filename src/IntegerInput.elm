@@ -2,7 +2,7 @@ module IntegerInput where
 
 import Html exposing (Html, Attribute, text, toElement, div, input, span)
 import Html.Attributes exposing (..)
-import Html.Events exposing (on, onDoubleClick, onKeyPress, targetValue)
+import Html.Events exposing (on, onClick, onKeyPress, targetValue)
 import Signal exposing (Address)
 import StartApp.Simple as StartApp
 import String exposing (toInt)
@@ -72,8 +72,14 @@ view address model =
 viewDisplay : Address Action -> Model -> Html
 viewDisplay address model =
   span
-    [ onDoubleClick address EnterEdit ]
-    [ text <| toString model.value ]
+    [ class "editable-label" ]
+    [ text <| toString model.value
+    , span
+      [ onClick address EnterEdit
+      , class "editable-label__button"
+      ]
+      [ text <| "edit" ]
+    ]
 
 viewEdit : Address Action -> Model -> Html
 viewEdit address model =

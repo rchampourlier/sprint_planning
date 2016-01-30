@@ -49,6 +49,10 @@ h1 {
 .issue-item {
 }
 
+.issue-item__summary {
+  padding-left: 5px;
+}
+
 /* TEAM MEMBERS */
 
 .team-members-box {
@@ -66,6 +70,11 @@ h1 {
   background: transparent;*/
 }
 
-.editable-label:focus {
-  border: 0;
+.editable-label .editable-label__button {
+  display: none;
+  margin-left: 5px;
+}
+
+.editable-label:hover .editable-label__button {
+  display: inline;
 }

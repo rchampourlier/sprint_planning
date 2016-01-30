@@ -74,7 +74,7 @@ view address model teamMemberNames =
     tr [ class "issue-item", key model.key ]
       [ td []
         [ strong [] [ text model.key ]
-        , span [] [ text model.summary ]
+        , span [ class "issue-item__summary" ] [ text model.summary ]
         ]
       , td [] [ text <| toString model.estimate ]
       , td
