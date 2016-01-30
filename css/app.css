@@ -57,3 +57,15 @@ h1 {
 .team-member-item {
 
 }
+
+/* COMPONENTS */
+
+.editable-label {
+  /*border: 0;
+  font-size: 1em;
+  background: transparent;*/
+}
+
+.editable-label:focus {
+  border: 0;
+}

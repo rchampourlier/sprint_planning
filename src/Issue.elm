@@ -2,35 +2,30 @@ module Issue (Action, Model, init, update, view) where
 
 import Html exposing (..)
 import Html.Attributes exposing (class, key)
-import Html.Events exposing (onClick)
 import MoreHtmlEvents exposing (onDrag, onDragOver, onDrop)
-import Debug exposing (log)
 
 import Mui
-
-import TeamMember
 
 
 -- MODEL
 
-type alias TeamMemberID = Int
 type Role = Developer | Reviewer
 
 type alias Model =
   { key : String
   , summary : String
-  , estimate : Float
-  , developerID : Maybe TeamMemberID
-  , reviewerID : Maybe TeamMemberID
+  , estimate : Int
+  , developerName : Maybe String
+  , reviewerName : Maybe String
   }
 
-init : String -> String -> Float -> Model
-init key summary estimate =
+init : String -> String -> Int -> Maybe String -> Maybe String -> Model
+init key summary estimate maybeDeveloperName maybeReviewerName =
   { key = key
   , summary = summary
   , estimate = estimate
-  , developerID = Nothing
-  , reviewerID = Nothing
+  , developerName = maybeDeveloperName
+  , reviewerName = maybeReviewerName
   }
 
 
@@ -42,51 +37,54 @@ type Action
   | Assign Role Mui.Action
   | Unassign Role
 
-update : Action -> Model -> Maybe TeamMemberID -> Model
-update action model maybeTeamMemberID =
+update : Action -> Model -> Maybe String -> Model
+update action model maybeTeamMemberName =
   case action of
 
     DragOver role -> model
 
     DropAndAssign role ->
       case role of
-        Developer -> { model | developerID = maybeTeamMemberID }
-        Reviewer -> { model | reviewerID = maybeTeamMemberID }
+        Developer -> { model | developerName = maybeTeamMemberName }
+        Reviewer -> { model | reviewerName = maybeTeamMemberName }
 
     Assign role muiAction ->
       let
-        selectedTeamMemberID = Mui.selectedID muiAction
+        selectedTeamMemberName = Mui.selectedID muiAction
       in
         case role of
           Developer ->
-            { model | developerID = selectedTeamMemberID }
+            { model | developerName = selectedTeamMemberName }
           Reviewer ->
-            { model | reviewerID = selectedTeamMemberID }
+            { model | reviewerName = selectedTeamMemberName }
 
     Unassign role ->
       case role of
-        Developer -> { model | developerID = Nothing }
-        Reviewer -> { model | reviewerID = Nothing }
+        Developer -> { model | developerName = Nothing }
+        Reviewer -> { model | reviewerName = Nothing }
 
 
 -- VIEW
 
-view : Signal.Address Action -> Model -> List (TeamMemberID, String) -> Html
-view address model teamMemberIDAndNames =
-  tr [ class "issue-item", key model.key ]
-    [ td []
-      [ strong [] [ text model.key ]
-      , span [] [ text model.summary ]
+view : Signal.Address Action -> Model -> List String -> Html
+view address model teamMemberNames =
+  let
+    options = List.map (\n -> (n, n)) teamMemberNames
+  in
+    tr [ class "issue-item", key model.key ]
+      [ td []
+        [ strong [] [ text model.key ]
+        , span [] [ text model.summary ]
+        ]
+      , td [] [ text <| toString model.estimate ]
+      , td
+        [ onDragOver address (DragOver Developer)
+        , onDrop address (DropAndAssign Developer)
+        ]
+        [ Mui.selectBox (Signal.forwardTo address (Assign Developer)) "None" options model.developerName ]
+      , td
+        [ onDragOver address (DragOver Reviewer)
+        , onDrop address (DropAndAssign Reviewer)
+        ]
+        [ Mui.selectBox (Signal.forwardTo address (Assign Reviewer)) "None" options model.reviewerName ]
       ]
-    , td [] [ text <| toString model.estimate ]
-    , td
-      [ onDragOver address (DragOver Developer)
-      , onDrop address (DropAndAssign Developer)
-      ]
-      [ Mui.selectBox (Signal.forwardTo address (Assign Developer)) "None" teamMemberIDAndNames model.developerID ]
-    , td
-      [ onDragOver address (DragOver Reviewer)
-      , onDrop address (DropAndAssign Reviewer)
-      ]
-      [ Mui.selectBox (Signal.forwardTo address (Assign Reviewer)) "None" teamMemberIDAndNames model.reviewerID ]
-    ]

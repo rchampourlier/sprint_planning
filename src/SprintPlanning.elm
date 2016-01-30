@@ -4,68 +4,60 @@ import Effects exposing (Effects, Never)
 import Http
 import Html exposing (..)
 import Html.Attributes exposing (class, style, draggable)
-import Html.Events exposing (onClick)
+import Json.Decode exposing ((:=))
+import Json.Decode as Json
 import MoreHtmlEvents exposing (onDrag, onDragOver, onDrop)
 import List
-import ListFunctions
-import Json.Decode as Json
+import ListFunctions exposing (indexList)
 import Task
-import Debug exposing (log)
 
 import Issue
+import Issues
 import TeamMember
+import TeamMembers
 
 
 -- MODEL
 
-type alias TeamMemberID = Int
 type Role = Developer | Reviewer
 type IssueStatus = TODO | DONE
-type alias Assignment = (TeamMember.Model, Role, Issue.Model)
+type alias ID = Int
 type alias Model =
   { issues : List Issue.Model
-  , teamMembers : List (TeamMemberID, TeamMember.Model)
-  , draggedTeamMemberID : Maybe TeamMemberID
+  , teamMembers : List (ID, TeamMember.Model)
+  , draggedTeamMemberName : Maybe String
   }
 
-init : List Issue.Model -> List TeamMember.Model -> (Model, Effects Action)
-init issues teamMembers =
-  let
-    indexList : List a -> Int -> List (Int, a)
-    indexList list startIndex =
-      case list of
-        head :: tail -> (startIndex, head) :: indexList tail (startIndex + 1)
-        _ -> []
-    teamMembersWithIDs = indexList teamMembers 0
-  in
-    ( Model issues teamMembersWithIDs Nothing
-    , getIssues "PROJECT = \"JT\""
-    )
+init : (Model, Effects Action)
+init =
+  ( Model [] [] Nothing
+  , getIssues "PROJECT = \"JT\""
+  )
 
-getTotalAssignedEstimate : Model -> TeamMemberID -> Role -> Float
-getTotalAssignedEstimate model teamMemberID role =
+getTotalAssignedEstimate : Model -> String -> Role -> Int
+getTotalAssignedEstimate model teamMemberName role =
   let
-    is : Role -> TeamMemberID -> Issue.Model -> Bool
-    is role teamMemberID issue =
-      let issueTMIDForRole =
+    is : Role -> String -> Issue.Model -> Bool
+    is role teamMemberName issue =
+      let issueTMNameForRole =
         case role of
-          Developer -> issue.developerID
-          Reviewer -> issue.reviewerID
+          Developer -> issue.developerName
+          Reviewer -> issue.reviewerName
       in
-        case issueTMIDForRole of
+        case issueTMNameForRole of
           Nothing -> False
-          Just tmID -> tmID == teamMemberID
+          Just tmName -> tmName == teamMemberName
   in
-    List.filter (is role teamMemberID) model.issues
+    List.filter (is role teamMemberName) model.issues
       |> sumEstimates
 
 getIssuesForStatus : IssueStatus -> Model -> List Issue.Model
 getIssuesForStatus status model =
   case status of
-    TODO -> List.filter (\i -> i.developerID == Nothing || i.reviewerID == Nothing) model.issues
-    DONE -> List.filter (\i -> i.developerID /= Nothing && i.reviewerID /= Nothing) model.issues
+    TODO -> List.filter (\i -> i.developerName == Nothing || i.reviewerName == Nothing) model.issues
+    DONE -> List.filter (\i -> i.developerName /= Nothing && i.reviewerName /= Nothing) model.issues
 
-sumEstimates : List Issue.Model -> Float
+sumEstimates : List Issue.Model -> Int
 sumEstimates issues =
   List.map (\i -> i.estimate) issues
     |> List.foldl (+) 0
@@ -74,28 +66,49 @@ sumEstimates issues =
 -- UPDATE
 
 type Action
-  = ReceivedIssues (Maybe String)
-  | Drag TeamMemberID
-  | Modify Issue.Model Issue.Action
+  = ReceivedIssues (Maybe (List Issue.Model))
+  | Drag String
+  | ModifyIssue Issue.Model Issue.Action
+  | ModifyTeamMember ID TeamMember.Action
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
 
-    ReceivedIssues string ->
-      ( model, Effects.none )
+    ReceivedIssues maybeIssues ->
+      case maybeIssues of
+        Nothing -> ( model, Effects.none )
+        Just issues ->
+          let
+            names = Issues.teamMembersNames issues
+            teamMemberModels = TeamMembers.fromNames names
+          in
+            ( { model | issues = issues, teamMembers = (indexList teamMemberModels 0) }
+            , Effects.none )
 
-    Drag teamMemberID ->
-      ( { model | draggedTeamMemberID = Just teamMemberID }
+    Drag teamMemberName ->
+      ( { model | draggedTeamMemberName = Just teamMemberName }
       , Effects.none )
 
-    Modify issue issueAction ->
+    ModifyIssue issue issueAction ->
       let updateIssue i =
         if i == issue
-          then Issue.update issueAction issue model.draggedTeamMemberID
+          then Issue.update issueAction issue model.draggedTeamMemberName
           else i
       in
         ( { model | issues = List.map updateIssue model.issues }
+        , Effects.none )
+
+    ModifyTeamMember id teamMemberAction ->
+      let
+        updateTeamMember : (ID, TeamMember.Model) -> (ID, TeamMember.Model)
+        updateTeamMember (teamMemberID, teamMemberModel) =
+          if teamMemberID == id then
+            (teamMemberID, TeamMember.update teamMemberAction teamMemberModel)
+          else
+            (teamMemberID, teamMemberModel)
+      in
+        ( { model | teamMembers = List.map updateTeamMember model.teamMembers }
         , Effects.none )
 
 
@@ -106,13 +119,12 @@ view address model =
   let
     issuesTodo = getIssuesForStatus TODO model
     issuesDone = getIssuesForStatus DONE model
-    teamMemberIDAndNames = List.map (\(id, tm) -> (id, tm.name)) model.teamMembers
   in
     div [ class "sprint-planning" ]
       [ div [ class "issues-box box mui-panel mui-col-md-9" ]
         [ h2 [] [ text "Issues" ]
-        , div [] [ viewIssues address "TODO" issuesTodo teamMemberIDAndNames ]
-        , div [] [ viewIssues address "DONE" issuesDone teamMemberIDAndNames ]
+        , div [] [ viewIssues address "TODO" issuesTodo model.teamMembers ]
+        , div [] [ viewIssues address "DONE" issuesDone model.teamMembers ]
         ]
       , div [ class "team-members-box box mui-panel mui-col-md-3" ]
         [ h2 [] [ text "Team Members" ]
@@ -120,11 +132,14 @@ view address model =
         ]
       ]
 
-viewIssues : Signal.Address Action -> String -> List Issue.Model -> List (TeamMemberID, String) -> Html
-viewIssues address label issues teamMemberIDAndNames =
+viewIssues : Signal.Address Action -> String -> List Issue.Model -> List (ID, TeamMember.Model) -> Html
+viewIssues address label issues teamMembersWithIDs =
   let
+    teamMemberNames = teamMembersWithIDs
+      |> List.map (\(id, tm) -> tm)
+      |> TeamMembers.toNames
     viewIssue : Issue.Model -> Html
-    viewIssue issue = Issue.view (Signal.forwardTo address (Modify issue)) issue teamMemberIDAndNames
+    viewIssue issue = Issue.view (Signal.forwardTo address (ModifyIssue issue)) issue teamMemberNames
   in
     div []
       [ h3 [] [ text label ]
@@ -143,38 +158,48 @@ viewIssues address label issues teamMemberIDAndNames =
 
 viewTeamMembers : Signal.Address Action -> Model -> Html
 viewTeamMembers address model =
-  div []
+  div
+    []
     (List.map (viewTeamMemberDraggable address model) model.teamMembers)
 
-viewTeamMemberDraggable : Signal.Address Action -> Model -> (TeamMemberID, TeamMember.Model) -> Html
-viewTeamMemberDraggable address model (teamMemberID, teamMember) =
+viewTeamMemberDraggable : Signal.Address Action -> Model -> (ID, TeamMember.Model) -> Html
+viewTeamMemberDraggable address model (teamMemberID, teamMemberModel) =
   let
-    developerEstimate = getTotalAssignedEstimate model teamMemberID Developer
-    reviewerEstimate = getTotalAssignedEstimate model teamMemberID Reviewer
+    developerEstimate = getTotalAssignedEstimate model teamMemberModel.name Developer
+    reviewerEstimate = getTotalAssignedEstimate model teamMemberModel.name Reviewer
+    viewTeamMember =
+      TeamMember.view (Signal.forwardTo address (ModifyTeamMember teamMemberID)) teamMemberModel developerEstimate reviewerEstimate
   in
     div
       [ class "team-member-item card"
       , draggable "true"
-      , onDrag address (Drag teamMemberID)
+      , onDrag address (Drag teamMemberModel.name)
       ]
-      [ TeamMember.view teamMember developerEstimate reviewerEstimate ]
+      [ viewTeamMember ]
 
 
 -- EFFECTS
 
-(=>) = (,)
-
 getIssues : String -> Effects Action
 getIssues jqlQuery =
   let
-    url_base = "https://job_tomate:jwKFhx7hUqFFAp2ciKagdofhzXkqgCbKuhZVCYeH3GddkNPtLa@jobteaser.atlassian.net/rest/api/2/search/"
-    url = Http.url url_base [ "jql" => jqlQuery ]
+    url_base = "http://api.sprint-planning.dev/issues"
+    url = Http.url url_base [ ]
   in
-    Http.get decodeUrl url
+    Http.get (Json.list decodeIssue) url
       |> Task.toMaybe
       |> Task.map ReceivedIssues
       |> Effects.task
 
-decodeUrl : Json.Decoder String
-decodeUrl =
-  Json.at ["total"] Json.string
+-- We must beware that if the decoder fails to decode
+-- a value (for example an estimate is null, and not
+-- an int), the whole decoder will return Nothing
+-- without more warning.
+decodeIssue : Json.Decoder Issue.Model
+decodeIssue =
+  Json.object5 Issue.init
+    ("key" := Json.string)
+    ("summary" := Json.string)
+    (Json.oneOf [ "estimate" := Json.int, Json.succeed 0 ])
+    (Json.maybe ( "developer" := Json.string ))
+    (Json.maybe ( "reviewer" := Json.string ))

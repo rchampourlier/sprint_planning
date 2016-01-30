@@ -2,13 +2,10 @@ module Mui (Action, selectBox, selectedID) where
 
 import Html exposing (..)
 import Html.Attributes exposing (attribute, property, class)
-import Html.Events exposing (onClick)
 import MoreHtmlEvents exposing (onChange)
 import Debug exposing (log)
 
-import Json.Encode
-
-type alias ID = Int
+type alias ID = String
 type alias Option = (ID, String)
 
 
@@ -18,6 +15,7 @@ selectBox address blankLabel options maybeSelectedOptionID =
     model = init blankLabel options maybeSelectedOptionID
   in
     view address model
+
 
 -- MODEL
 
