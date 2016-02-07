@@ -2,8 +2,10 @@ module TeamMemberList where
 
 import Html exposing (..)
 import Html.Attributes exposing (class, style, draggable)
+import Html.Events exposing (onClick)
 import List
 import ListFunctions exposing (indexList)
+import IndexedList
 
 import TeamMember
 
@@ -22,22 +24,23 @@ getNames : Model -> List String
 getNames model =
   model
     |> List.map (\(id, tm) -> tm)
-    |> List.map (\tm -> tm.name)
+    |> List.map (\tm -> TeamMember.getName tm)
 
 
 -- UPDATE
 
 type Action
   = Add
-  | Remove
+  | Remove ID
   | Modify ID TeamMember.Action
   -- | Drag ID
 
 update : Action -> Model -> Model
 update action model =
   case action of
-    Add -> model
-    Remove -> model
+    Add ->
+      IndexedList.append model (TeamMember.init "Unknown" 0)
+    Remove id -> model
     Modify id teamMemberAction ->
       let
         updateTeamMember : (ID, TeamMember.Model) -> (ID, TeamMember.Model)
@@ -57,7 +60,7 @@ updateAssignments model assignments =
       let
         applyIfMatchingName : (ID, TeamMember.Model) -> (ID, TeamMember.Model)
         applyIfMatchingName (id, teamMemberModel) =
-          if teamMemberModel.name == name
+          if TeamMember.getName teamMemberModel == name
             then (id, TeamMember.updateAssignments teamMemberModel nameAssignments)
             else (id, teamMemberModel)
       in
@@ -70,11 +73,17 @@ updateAssignments model assignments =
 view : Signal.Address Action -> Model -> Html
 view address model =
   let
-    viewTeamMember : (ID, TeamMember.Model) -> Html
-    viewTeamMember (id, tm) =
-      viewTeamMemberDraggable address (id, tm)
+    viewTeamMemberList = List.map (viewTeamMemberDraggable address) model
+    viewButtonAdd = button
+      [ class "mui-btn mui-btn--primary", onClick address Add ]
+      [ text "Add" ]
   in
-    div [ ] (List.map viewTeamMember model)
+    div
+      []
+      [ div
+          []
+          (viewTeamMemberList ++ [ viewButtonAdd ])
+      ]
 
 viewTeamMemberDraggable : Signal.Address Action -> (ID, TeamMember.Model) -> Html
 viewTeamMemberDraggable address (id, tm) =

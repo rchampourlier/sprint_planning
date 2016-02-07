@@ -2,6 +2,7 @@ module TeamMember where
 
 import Html exposing (..)
 import IntegerInput
+import StringInput
 
 
 -- MODEL
@@ -9,7 +10,7 @@ import IntegerInput
 type Role = Developer | Reviewer
 type alias Model =
   { capacity : IntegerInput.Model
-  , name : String
+  , name : StringInput.Model
   , assignmentDeveloper : Int
   , assignmentReviewer : Int
   }
@@ -17,22 +18,29 @@ type alias Model =
 init : String -> Int -> Model
 init name capacity =
   { capacity = IntegerInput.init capacity
-  , name = name
+  , name = StringInput.init name
   , assignmentDeveloper = 0
   , assignmentReviewer = 0
   }
+
+getName : Model -> String
+getName model =
+  StringInput.getValue model.name
 
 
 -- UPDATE
 
 type Action
   = ModifyCapacity IntegerInput.Action
+  | ModifyName StringInput.Action
 
 update : Action -> Model -> Model
 update action model =
   case action of
     ModifyCapacity integerInputAction ->
       { model | capacity = IntegerInput.update integerInputAction model.capacity }
+    ModifyName stringInputAction ->
+      { model | name = StringInput.update stringInputAction model.name }
 
 updateAssignments : Model -> List (Role, Int) -> Model
 updateAssignments model roleAssignments =
@@ -51,13 +59,14 @@ view : Signal.Address Action -> Model -> Html
 view address model =
   let
     remaining = (IntegerInput.getValue model.capacity) - model.assignmentDeveloper
-    viewIntegerInput = IntegerInput.view (Signal.forwardTo address ModifyCapacity) model.capacity
+    viewCapacityInput = IntegerInput.view (Signal.forwardTo address ModifyCapacity) model.capacity
+    viewNameInput = StringInput.view (Signal.forwardTo address ModifyName) model.name
   in
     div []
-      [ h4 [] [ text model.name ]
+      [ h4 [] [ viewNameInput ]
       , div []
         [ span [] [ text "Capacity: " ]
-        , span [] [ viewIntegerInput ]
+        , span [] [ viewCapacityInput ]
         ]
       , div []
         [ span [] [ text "Remaining: " ]
