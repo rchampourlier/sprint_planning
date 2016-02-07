@@ -10,8 +10,8 @@ substract list1 list2 =
 
 -- Returns an indexed list, where each item of the original
 -- list is mapped to a 2-uple with an integer index.
-indexList : List a -> Int -> List (Int, a)
-indexList list startIndex =
+indexList : Int -> List a -> List (Int, a)
+indexList startIndex list =
   case list of
-    head :: tail -> (startIndex, head) :: indexList tail (startIndex + 1)
+    head :: tail -> (startIndex, head) :: indexList (startIndex + 1) tail
     _ -> []
