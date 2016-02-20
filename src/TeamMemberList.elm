@@ -5,8 +5,9 @@ import Html.Attributes exposing (class, style, draggable)
 import Html.Events exposing (onClick)
 import List
 import ListFunctions exposing (indexList)
-import IndexedList
 
+import IndexedList
+import ProgressBar
 import TeamMember
 
 
@@ -25,6 +26,12 @@ getNames model =
   model
     |> List.map (\(id, tm) -> tm)
     |> List.map (\tm -> TeamMember.getName tm)
+
+getMaxCapacity : Model -> Int
+getMaxCapacity model =
+  List.map (\(id, tm) -> TeamMember.getCapacity tm) model
+    |> List.maximum
+    |> Maybe.withDefault 0
 
 
 -- UPDATE
@@ -73,23 +80,29 @@ updateAssignments model assignments =
 view : Signal.Address Action -> Model -> Html
 view address model =
   let
-    viewTeamMemberList = List.map (viewTeamMemberDraggable address) model
+    maxCapacity = toFloat <| getMaxCapacity model
     viewButtonAdd = button
       [ class "mui-btn mui-btn--primary", onClick address Add ]
       [ text "Add" ]
+    viewList = viewTeamMemberList address model maxCapacity
   in
-    div
-      []
-      [ div
-          []
-          (viewTeamMemberList ++ [ viewButtonAdd ])
+    div []
+      [ table [ class "team-members-list" ] viewList
+      , viewButtonAdd
       ]
 
-viewTeamMemberDraggable : Signal.Address Action -> (ID, TeamMember.Model) -> Html
-viewTeamMemberDraggable address (id, tm) =
-  div
-    [ class "team-member-item card"
-    , draggable "true"
-    -- , onDrag (Signal.forwardTo address (Drag id))
+viewTeamMemberList : Signal.Address Action -> Model -> Float -> List Html
+viewTeamMemberList address model maxCapacity =
+  List.concatMap (viewTeamMember address maxCapacity) model
+
+viewTeamMember : Signal.Address Action -> Float -> (ID, TeamMember.Model) -> List Html
+viewTeamMember address maxCapacity (id, tm) =
+  let
+    assigned = TeamMember.getAssigned tm
+    capacity = TeamMember.getCapacity tm
+    remaining = (toFloat capacity) - assigned
+    remainingPercentage = 100 * remaining / maxCapacity
+  in
+    [ TeamMember.view (Signal.forwardTo address (Modify id)) tm
+    , ProgressBar.view remaining
     ]
-    [ TeamMember.view (Signal.forwardTo address (Modify id)) tm ]

@@ -145,7 +145,7 @@ view address model =
         ]
       , div [ class "team-members-box box mui-panel mui-col-md-3" ]
         [ h2 [] [ text "Team Members" ]
-        , div [] [ viewTeamMembers address model ]
+        , viewTeamMembers address model
         ]
       ]
 

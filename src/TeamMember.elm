@@ -1,6 +1,7 @@
 module TeamMember where
 
 import Html exposing (..)
+import Html.Attributes exposing (class)
 import IntegerInput
 import StringInput
 
@@ -22,6 +23,14 @@ init name capacity =
   , assignmentDeveloper = 0
   , assignmentReviewer = 0
   }
+
+getAssigned : Model -> Float
+getAssigned model =
+  (toFloat model.assignmentDeveloper) + 0.2 * (toFloat model.assignmentReviewer)
+
+getCapacity : Model -> Int
+getCapacity model =
+  IntegerInput.getValue model.capacity
 
 getName : Model -> String
 getName model =
@@ -58,20 +67,21 @@ updateAssignments model roleAssignments =
 view : Signal.Address Action -> Model -> Html
 view address model =
   let
-    remaining = (IntegerInput.getValue model.capacity) - model.assignmentDeveloper
-    viewCapacityInput = IntegerInput.view (Signal.forwardTo address ModifyCapacity) model.capacity
     viewNameInput = StringInput.view (Signal.forwardTo address ModifyName) model.name
+    viewCapacityInput = IntegerInput.view (Signal.forwardTo address ModifyCapacity) model.capacity
+    viewAssigned = span [] [ text (toString assigned) ]
+    assigned = getAssigned model
+    remaining = toFloat (IntegerInput.getValue model.capacity) - assigned
+    capacityProgress = 1 - remaining / toFloat (getCapacity model)
   in
-    div []
-      [ h4 [] [ viewNameInput ]
-      , div []
-        [ span [] [ text "Capacity: " ]
-        , span [] [ viewCapacityInput ]
-        ]
-      , div []
-        [ span [] [ text "Remaining: " ]
-        , span [] [ text <| toString remaining ]
-        ]
-      , div []
-        [ span [] [ text <| "Review: " ++ (toString model.assignmentReviewer) ] ]
+    tr [ class "team-members-list__item" ]
+      [ td
+        [ class "team-members-list__item__segment team-members-list__item__segment--name" ]
+        [ viewNameInput ]
+      , td
+        [ class "team-members-list__item__segment team-members-list__item__segment--capacity" ]
+        [ viewCapacityInput ]
+      , td
+        [ class "team-members-list__item__segment team-members-list__item__segment--assigned" ]
+        [ viewAssigned ]
       ]

@@ -8,34 +8,9 @@ h1 {
   color: #666;
 }
 
-/* SHARED */
-
-.box {
-  display: flex;
-  flex-direction: column;
-}
-
-.box h2 {
-  margin-top: 0;
-}
-
-.card {
-  background-color: #eee;
-  margin: 0.2em;
-  padding: 0.5em;
-}
-
-.card h4 {
-  margin-top: 0;
-  margin-bottom: 0;
-  font-weight: bold;
-}
-
 /* SPRINT PLANNING */
 
 .sprint-planning {
-  display: flex;
-  flex-direction: row;
 }
 
 /* ISSUES */
@@ -55,19 +30,37 @@ h1 {
 
 /* TEAM MEMBERS */
 
-.team-members-box {
+.team-members-list {
+  margin-bottom: 20px;
+  width: 100%;
 }
 
-.team-member-item {
+.team-members-list__item {
+  font-size: 1.1em;
+}
 
+.team-members-list__item__segment {
+  padding-top: 20px;
+}
+
+.team-members-list__item__segment--name {
+  width: 100%;
+  font-weight: bold;
+}
+
+.team-members-list__item__segment--capacity {
+  min-width: 40px;
+}
+
+.team-members-list__item__segment--assigned {
+  min-width: 40px;
 }
 
 /* COMPONENTS */
 
+/* EDITABLE-LABEL */
+
 .editable-label {
-  /*border: 0;
-  font-size: 1em;
-  background: transparent;*/
 }
 
 .editable-label .editable-label__button {
@@ -77,4 +70,18 @@ h1 {
 
 .editable-label:hover .editable-label__button {
   display: inline;
+}
+
+/* UI */
+
+.meter {
+  position: relative;
+  background: #DDD;
+}
+
+.meter__level {
+  display: block;
+  height: 5px;
+  position: relative;
+  overflow: hidden;
 }
